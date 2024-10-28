@@ -11,6 +11,9 @@ const MapboxExample: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mapStyle, setMapStyle] = useState(
+    "mapbox://styles/mapbox/streets-v12"
+  );
 
   useEffect(() => {
     mapboxgl.accessToken =
@@ -20,7 +23,7 @@ const MapboxExample: React.FC = () => {
       // Initialize the Mapbox map instance
       mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: "mapbox://styles/mapbox/streets-v12",
+        style: mapStyle,
         center: [-24, 42],
         zoom: 1,
       });
@@ -62,7 +65,30 @@ const MapboxExample: React.FC = () => {
     return () => {
       if (mapRef.current) mapRef.current.remove();
     };
-  }, []);
+  }, []); // Initial map setup
+
+  // Toggle map style without resetting zoom or center
+  const toggleMapStyle = () => {
+    if (mapRef.current) {
+      // Get current center and zoom
+      const currentCenter = mapRef.current.getCenter();
+      const currentZoom = mapRef.current.getZoom();
+
+      // Toggle style
+      const newStyle =
+        mapStyle === "mapbox://styles/mapbox/streets-v12"
+          ? "mapbox://styles/mapbox/satellite-streets-v12"
+          : "mapbox://styles/mapbox/streets-v12";
+      setMapStyle(newStyle);
+
+      // Set the new style while preserving center and zoom
+      mapRef.current.setStyle(newStyle);
+      mapRef.current.on("style.load", () => {
+        mapRef.current?.setCenter(currentCenter);
+        mapRef.current?.setZoom(currentZoom);
+      });
+    }
+  };
 
   // Handle search submission
   const handleSearch = async (e: React.FormEvent) => {
@@ -89,9 +115,9 @@ const MapboxExample: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-[calc(100dvh)]">
+    <div className="w-full h-[calc(100dvh)] relative">
       {/* Search Input */}
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-4 left-4 z-[2] flex gap-2">
         <form onSubmit={handleSearch}>
           <input
             type="text"
@@ -107,6 +133,14 @@ const MapboxExample: React.FC = () => {
             Search
           </button>
         </form>
+
+        {/* Toggle Button */}
+        <button
+          onClick={toggleMapStyle}
+          className="p-2 bg-gray-500 text-white rounded"
+        >
+          Toggle View
+        </button>
       </div>
 
       {/* Map Container */}
