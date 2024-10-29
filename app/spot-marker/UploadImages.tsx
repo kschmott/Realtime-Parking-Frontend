@@ -1,5 +1,3 @@
-// UploadImages.tsx
-
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button"; // Replace with the actual path to your Shadcn Button component
 import { readAndCompressImage } from "browser-image-resizer";
@@ -51,7 +49,7 @@ const UploadImages: React.FC<UploadImagesProps> = ({ setImages }) => {
   };
 
   return (
-    <div>
+    <div className="flex justify-center "> {/* Flex container to center the button */}
       <Button onClick={handleButtonClick}>Upload Images</Button>
       <input
         type="file"

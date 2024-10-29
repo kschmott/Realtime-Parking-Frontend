@@ -25,18 +25,20 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({
   };
 
   return (
-    <Select onValueChange={handleChange} value={String(selectedImageIndex)}>
-      <SelectTrigger className="max-w-xs">
-        <SelectValue placeholder="Select Image" />
-      </SelectTrigger>
-      <SelectContent className="max-w-xs">
-        {images.map((_, index) => (
-          <SelectItem key={index} value={String(index)}>
-            Image {index + 1}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="flex justify-center "> {/* Centering Container */}
+      <Select onValueChange={handleChange} value={String(selectedImageIndex)}>
+        <SelectTrigger className="max-w-xs">
+          <SelectValue placeholder="Select Image" />
+        </SelectTrigger>
+        <SelectContent className="max-w-xs">
+          {images.map((_, index) => (
+            <SelectItem key={index} value={String(index)}>
+              Image {index + 1}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 

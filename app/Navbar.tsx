@@ -5,7 +5,7 @@ import React from "react";
 function Navbar({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
-      <nav className=" flex gap-4 sticky top-0 left-0 z-10 bg-white w-full">
+      <nav className=" flex gap-4 sticky top-0 left-0 z-10 bg-transparent w-full">
         <Button variant="link">
           <Link href="/">Home</Link>
         </Button>

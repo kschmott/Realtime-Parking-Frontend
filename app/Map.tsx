@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, forwardRef } from "react";
 import mapboxgl, {
   Map as MapboxMap,
   GeolocateControl,
@@ -7,7 +7,7 @@ import mapboxgl, {
 } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const MapboxExample: React.FC = () => {
+const MapboxExample = forwardRef((props, ref) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,7 +47,7 @@ const MapboxExample: React.FC = () => {
 
       // Example parking spots (replace with real-time data)
       const parkingSpots = [
-        { lng: -24.001, lat: 42.001, available: true },
+        { lng: -24.001, lat: 42.001, available: false },
         { lng: -24.002, lat: 42.002, available: false },
       ];
 
@@ -147,6 +147,6 @@ const MapboxExample: React.FC = () => {
       <div id="map" ref={mapContainerRef} style={{ height: "100%" }}></div>
     </div>
   );
-};
+});
 
 export default MapboxExample;

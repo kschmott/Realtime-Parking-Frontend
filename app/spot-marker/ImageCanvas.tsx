@@ -1,8 +1,7 @@
-// ImageCanvas.tsx
-
 import React, { useState, useRef, useEffect } from "react";
 import { Spot, Point } from "./types";
-import { Button } from "@/components/ui/button"; // Replace with the actual path to your Shadcn Button component
+import { Button } from "@/components/ui/button";
+import SimpleMap from "../MapMark"; // Import the new SimpleMap component
 
 interface ImageCanvasProps {
   image: string;
@@ -22,9 +21,13 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
   setNextSpotId,
 }) => {
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
+  const [isEditable, setIsEditable] = useState<boolean>(true);
+  const [showMap, setShowMap] = useState<boolean>(false); // State to toggle map visibility
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isEditable) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -37,7 +40,6 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
   useEffect(() => {
     if (currentPoints.length === 4) {
-      // Save the spot
       const newSpot: Spot = {
         id: nextSpotId,
         imageIndex,
@@ -46,13 +48,12 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
       setSpots((prev) => [...prev, newSpot]);
       setNextSpotId((prev) => prev + 1);
       setCurrentPoints([]);
+      setIsEditable(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPoints]);
 
   useEffect(() => {
     drawCanvas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [image, spots, currentPoints, imageIndex]);
 
   const drawCanvas = () => {
@@ -61,22 +62,17 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw the image
     const img = new Image();
     img.src = image;
     img.onload = () => {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      // Draw existing spots
       spots
         .filter((spot) => spot.imageIndex === imageIndex)
         .forEach((spot) => {
           drawSpot(ctx, spot);
         });
 
-      // Draw current points
       currentPoints.forEach((point) => {
         drawPoint(ctx, point);
       });
@@ -93,7 +89,6 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
   const drawSpot = (ctx: CanvasRenderingContext2D, spot: Spot) => {
     const { points, id } = spot;
 
-    // Draw the polygon
     ctx.fillStyle = "rgba(0, 255, 0, 0.3)";
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
@@ -103,7 +98,6 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     ctx.closePath();
     ctx.fill();
 
-    // Draw the spot ID at the center
     const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
     const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
 
@@ -115,30 +109,49 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
   const handleRemoveLastSpot = () => {
     if (spots.length === 0) return;
 
-    // Remove the last spot that was added
     const updatedSpots = spots.slice(0, -1);
     setSpots(updatedSpots);
-
-    // Decrement nextSpotId if it's greater than 1
     setNextSpotId((prevId) => (prevId > 1 ? prevId - 1 : 1));
+    setIsEditable(true);
+  };
+
+  const handleSpotPlacedOnMap = (point: { lng: number; lat: number }) => {
+    const newPoint: Point = { x: point.lng, y: point.lat }; // Map coordinates to canvas coordinates if needed
+    setCurrentPoints((prev) => [...prev, newPoint]);
+    setShowMap(false); // Hide map after placing the spot
   };
 
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      <canvas
-        ref={canvasRef}
-        width={640}
-        height={640}
-        onClick={handleClick}
-        style={{ border: "1px solid black" }}
-      />
-      <Button
-        onClick={handleRemoveLastSpot}
-        style={{ position: "absolute", top: 10, right: 10 }}
-      >
+    <div className="flex flex-col items-center justify-center">
+  <div style={{ position: "relative", display: "inline-block" }}>
+    {showMap ? (
+      <SimpleMap onSpotPlaced={handleSpotPlacedOnMap} />
+    ) : (
+      <>
+        <canvas
+          ref={canvasRef}
+          width={640}
+          height={640}
+          onClick={handleClick}
+          style={{ border: "1px solid black" }}
+        />
+      </>
+    )}
+  </div>
+
+    {/* Button container below the canvas */}
+    <div className="mt-4 flex space-x-6">
+      <Button onClick={handleRemoveLastSpot}>
         Remove Last Spot
       </Button>
+      <Button
+        onClick={() => setShowMap(true)}
+        disabled={!isEditable} // Disable if not editable
+      >
+        Place Spot on Map
+      </Button>
     </div>
+  </div>
   );
 };
 
