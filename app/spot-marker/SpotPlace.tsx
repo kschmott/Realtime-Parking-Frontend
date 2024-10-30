@@ -1,11 +1,7 @@
 import React, { useState, useRef } from "react";
 import ImageCanvas from "./ImageCanvas"; // Adjust the import path as needed
-import MapboxExample from "../Map"; // Adjust the import path as needed
-import mapboxgl, {
-    Map as MapboxMap,
-    GeolocateControl,
-    Marker,
-  } from "mapbox-gl";
+import MapboxExample from "../MapMark"; // Adjust the import path as needed
+import mapboxgl from 'mapbox-gl';
 import { Spot } from "./types"; // Adjust the import path as needed
 
 const ParentComponent: React.FC = () => {
@@ -13,17 +9,11 @@ const ParentComponent: React.FC = () => {
   const [nextSpotId, setNextSpotId] = useState(1);
   const mapRef = useRef<any>(null); // Reference for the Mapbox map
 
-  const handleSpotPlacedOnMap = () => {
-    const lastSpot = spots[spots.length - 1];
-    if (lastSpot && mapRef.current) {
-      // Add logic to place the last drawn spot on the map
-      const { points } = lastSpot;
-      const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
-      const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
-
-      // Use Mapbox to add a marker at the calculated center
+  const handleSpotPlacedOnMap = (lng: number, lat: number) => {
+    if (mapRef.current) {
+      // Use Mapbox to add a marker at the specified longitude and latitude
       new mapboxgl.Marker({ color: "blue" })
-        .setLngLat([centerX, centerY]) // Replace with appropriate longitude and latitude
+        .setLngLat([lng, lat]) // Place the marker at the provided coordinates
         .addTo(mapRef.current);
     }
   };
@@ -37,9 +27,8 @@ const ParentComponent: React.FC = () => {
         setSpots={setSpots}
         nextSpotId={nextSpotId}
         setNextSpotId={setNextSpotId}
-        // onSpotPlacedOnMap={handleSpotPlacedOnMap} // Pass the function as a prop
       />
-      <MapboxExample ref={mapRef} /> {/* Pass ref to the Mapbox component */}
+      <MapboxExample ref={mapRef} onSpotPlaced={handleSpotPlacedOnMap} /> {/* Pass ref and onSpotPlaced function */}
     </div>
   );
 };

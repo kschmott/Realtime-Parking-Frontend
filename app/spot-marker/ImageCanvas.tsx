@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button"; // Ensure this is the correct path for your Button component
+import MapboxExample from "../MapMark"; // Adjust the path if necessary
 import { Spot, Point } from "./types";
-import { Button } from "@/components/ui/button";
-import SimpleMap from "../MapMark"; // Import the new SimpleMap component
 
 interface ImageCanvasProps {
   image: string;
@@ -22,7 +22,7 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
 }) => {
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
   const [isEditable, setIsEditable] = useState<boolean>(true);
-  const [showMap, setShowMap] = useState<boolean>(false); // State to toggle map visibility
+  const [showMap, setShowMap] = useState<boolean>(false); // Toggle map visibility
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -48,7 +48,7 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
       setSpots((prev) => [...prev, newSpot]);
       setNextSpotId((prev) => prev + 1);
       setCurrentPoints([]);
-      setIsEditable(false);
+      setIsEditable(true); // Re-enable for more spots
     }
   }, [currentPoints]);
 
@@ -115,43 +115,36 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     setIsEditable(true);
   };
 
-  const handleSpotPlacedOnMap = (point: { lng: number; lat: number }) => {
-    const newPoint: Point = { x: point.lng, y: point.lat }; // Map coordinates to canvas coordinates if needed
+  const handleSpotPlacedOnMap = (lng: number, lat: number) => {
+    const newPoint: Point = { x: lng, y: lat };
     setCurrentPoints((prev) => [...prev, newPoint]);
     setShowMap(false); // Hide map after placing the spot
   };
 
   return (
     <div className="flex flex-col items-center justify-center">
-  <div style={{ position: "relative", display: "inline-block" }}>
-    {showMap ? (
-      <SimpleMap onSpotPlaced={handleSpotPlacedOnMap} />
-    ) : (
-      <>
-        <canvas
-          ref={canvasRef}
-          width={640}
-          height={640}
-          onClick={handleClick}
-          style={{ border: "1px solid black" }}
-        />
-      </>
-    )}
-  </div>
+      <div style={{ position: "relative", display: "inline-block" }}>
+        {showMap ? (
+          <MapboxExample onSpotPlaced={handleSpotPlacedOnMap} /> // Ensure your MapboxExample can handle the new prop
+        ) : (
+          <canvas
+            ref={canvasRef}
+            width={640}
+            height={640}
+            onClick={handleClick}
+            style={{ border: "1px solid black" }}
+          />
+        )}
+      </div>
 
-    {/* Button container below the canvas */}
-    <div className="mt-4 flex space-x-6">
-      <Button onClick={handleRemoveLastSpot}>
-        Remove Last Spot
-      </Button>
-      <Button
-        onClick={() => setShowMap(true)}
-        disabled={!isEditable} // Disable if not editable
-      >
-        Place Spot on Map
-      </Button>
+      {/* Button container below the canvas */}
+      <div className="mt-4 flex space-x-6">
+        <Button onClick={handleRemoveLastSpot}>Remove Last Spot</Button>
+        <Button onClick={() => setShowMap(true)}>
+          Place Spot on Map
+        </Button>
+      </div>
     </div>
-  </div>
   );
 };
 
