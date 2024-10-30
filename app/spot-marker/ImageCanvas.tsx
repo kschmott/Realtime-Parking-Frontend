@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button"; // Ensure this is the correct path for your Button component
 import MapboxExample from "../MapMark"; // Adjust the path if necessary
 import { Spot, Point } from "./types";
-import { Button } from "@/components/ui/button";
 import SimpleMap from "./MapMark"; // Import the SimpleMap component
 import {
   Select,
@@ -139,9 +138,10 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
   };
 
   return (
-    <div className="flex space-x-6">
-      {/* Canvas for image marking */}
-      <div style={{ position: "relative", display: "inline-block" }}>
+    <div className="flex space-x-6 items-start">
+      {/* Image Section */}
+      <div style={{ position: "relative", width: "50%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {/* Canvas for image marking */}
         <canvas
           ref={canvasRef}
           width={640}
@@ -149,24 +149,34 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
           onClick={handleClick}
           style={{ border: "1px solid black" }}
         />
-        <Button onClick={handleRemoveLastSpot}>Remove Last Spot</Button>
+        <Button onClick={handleRemoveLastSpot} style={{ marginTop: "10px", alignSelf: "center" }}>Remove Last Spot</Button>
       </div>
 
-      {/* Map section */}
-      <div className="flex flex-col items-center">
-        {/* Select component above the map */}
-        <Select onValueChange={handleSelectChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select Spot" />
-          </SelectTrigger>
-          <SelectContent>
-            {spots.map((spot) => (
-              <SelectItem key={spot.id} value={String(spot.id)}>
-                Spot {spot.id}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Map Section */}
+      <div style={{ position: "relative", width: "50%", height: "640px", display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
+        {/* Dropdown centered above the map */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-50px", // Adjust vertical positioning as needed
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1,
+          }}
+        >
+          <Select onValueChange={handleSelectChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Map Spot" />
+            </SelectTrigger>
+            <SelectContent>
+              {spots.map((spot) => (
+                <SelectItem key={spot.id} value={String(spot.id)}>
+                  Spot {spot.id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Map component */}
         <SimpleMap
@@ -177,6 +187,7 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
       </div>
     </div>
   );
+  
 };
 
 export default ImageCanvas;

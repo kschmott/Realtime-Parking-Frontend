@@ -25,7 +25,7 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({
   };
 
   return (
-    <div className="flex justify-center "> {/* Centering Container */}
+    <div className="flex justify-center " style={{ marginLeft: "-700px" }}> {/* Centering Container */}
       <Select onValueChange={handleChange} value={String(selectedImageIndex)}>
         <SelectTrigger className="max-w-xs">
           <SelectValue placeholder="Select Image" />
