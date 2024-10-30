@@ -1,7 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Spot, Point } from "./types";
 import { Button } from "@/components/ui/button";
-import SimpleMap from "../MapMark"; // Import the new SimpleMap component
+import SimpleMap from "./MapMark"; // Import the SimpleMap component
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"; // Import Shadcn select components
 
 interface ImageCanvasProps {
   image: string;
@@ -21,12 +28,11 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
   setNextSpotId,
 }) => {
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
-  const [isEditable, setIsEditable] = useState<boolean>(true);
-  const [showMap, setShowMap] = useState<boolean>(false); // State to toggle map visibility
+  const [selectedSpotId, setSelectedSpotId] = useState<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isEditable) return;
+    if (currentPoints.length >= 4) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -44,16 +50,18 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
         id: nextSpotId,
         imageIndex,
         points: currentPoints,
+        location: null, // Add location property to Spot
       };
       setSpots((prev) => [...prev, newSpot]);
       setNextSpotId((prev) => prev + 1);
       setCurrentPoints([]);
-      setIsEditable(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPoints]);
 
   useEffect(() => {
     drawCanvas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [image, spots, currentPoints, imageIndex]);
 
   const drawCanvas = () => {
@@ -112,22 +120,26 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     const updatedSpots = spots.slice(0, -1);
     setSpots(updatedSpots);
     setNextSpotId((prevId) => (prevId > 1 ? prevId - 1 : 1));
-    setIsEditable(true);
   };
 
   const handleSpotPlacedOnMap = (point: { lng: number; lat: number }) => {
-    const newPoint: Point = { x: point.lng, y: point.lat }; // Map coordinates to canvas coordinates if needed
-    setCurrentPoints((prev) => [...prev, newPoint]);
-    setShowMap(false); // Hide map after placing the spot
+    if (selectedSpotId === null) return;
+
+    setSpots((prevSpots) =>
+      prevSpots.map((spot) =>
+        spot.id === selectedSpotId ? { ...spot, location: point } : spot
+      )
+    );
+  };
+
+  const handleSelectChange = (value: string) => {
+    setSelectedSpotId(Number(value));
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-  <div style={{ position: "relative", display: "inline-block" }}>
-    {showMap ? (
-      <SimpleMap onSpotPlaced={handleSpotPlacedOnMap} />
-    ) : (
-      <>
+    <div className="flex space-x-6">
+      {/* Canvas for image marking */}
+      <div style={{ position: "relative", display: "inline-block" }}>
         <canvas
           ref={canvasRef}
           width={640}
@@ -135,23 +147,33 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
           onClick={handleClick}
           style={{ border: "1px solid black" }}
         />
-      </>
-    )}
-  </div>
+        <Button onClick={handleRemoveLastSpot}>Remove Last Spot</Button>
+      </div>
 
-    {/* Button container below the canvas */}
-    <div className="mt-4 flex space-x-6">
-      <Button onClick={handleRemoveLastSpot}>
-        Remove Last Spot
-      </Button>
-      <Button
-        onClick={() => setShowMap(true)}
-        disabled={!isEditable} // Disable if not editable
-      >
-        Place Spot on Map
-      </Button>
+      {/* Map section */}
+      <div className="flex flex-col items-center">
+        {/* Select component above the map */}
+        <Select onValueChange={handleSelectChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Spot" />
+          </SelectTrigger>
+          <SelectContent>
+            {spots.map((spot) => (
+              <SelectItem key={spot.id} value={String(spot.id)}>
+                Spot {spot.id}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Map component */}
+        <SimpleMap
+          onSpotPlaced={handleSpotPlacedOnMap}
+          selectedSpotId={selectedSpotId}
+          spots={spots}
+        />
+      </div>
     </div>
-  </div>
   );
 };
 
