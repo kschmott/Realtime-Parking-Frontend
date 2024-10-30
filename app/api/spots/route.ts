@@ -1,4 +1,4 @@
-import { updateSpots } from "@/db/spots";
+import { getAllSpots, updateSpots } from "@/db/spots";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -28,4 +28,12 @@ function decodeLoraMessage(bytes: Uint8Array) {
     spots.push({ id, status: isOccupied ? "occupied" : "available" });
   }
   return spots;
+}
+
+export async function GET(req: Request) {
+  const spots = await getAllSpots();
+  console.log(spots);
+  return Response.json({
+    spots,
+  });
 }

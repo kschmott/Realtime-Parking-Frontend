@@ -5,15 +5,47 @@ import mapboxgl, {
   GeolocateControl,
   Marker,
 } from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 
 const MapboxExample = forwardRef((props, ref) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [parkingSpots, setParkingSpots] = useState([]);
   const mapRef = useRef<MapboxMap | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [mapStyle, setMapStyle] = useState(
     "mapbox://styles/mapbox/streets-v12"
   );
+
+  useEffect(() => {
+    console.log(parkingSpots, "parkingSpots");
+    console.log(mapReady, "mapReady");
+    if (mapReady && parkingSpots.length > 0) {
+      parkingSpots.forEach(
+        (spot: {
+          id: number;
+          latitude: number;
+          longitude: number;
+          status: string;
+        }) => {
+          new Marker({
+            color: spot.status ? "green" : "red",
+          })
+            .setLngLat([spot.longitude, spot.latitude])
+            .addTo(mapRef.current as MapboxMap);
+        }
+      );
+    }
+  }, [mapReady, parkingSpots]);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch("/api/spots");
+      const data = await res.json();
+      setParkingSpots(data.spots);
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     mapboxgl.accessToken =
@@ -37,35 +69,53 @@ const MapboxExample = forwardRef((props, ref) => {
         showUserHeading: true,
         fitBoundsOptions: { maxZoom: 15 },
       });
-
       mapRef.current.addControl(geolocateControl);
 
-      // Automatically trigger the geolocate control
-      mapRef.current.on("load", () => {
-        geolocateControl.trigger();
+      // Add Mapbox Geocoder for search functionality
+      const geocoder = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl as any,
+        marker: false, // Disable default marker
+        placeholder: "Search for a location",
       });
+      if (parkingSpots.length > 0) {
+        parkingSpots.forEach(
+          (spot: {
+            id: number;
+            latitude: number;
+            longitude: number;
+            status: string;
+          }) => {
+            new Marker({
+              color: spot.status ? "green" : "red",
+            })
+              .setLngLat([spot.longitude, spot.latitude])
+              .addTo(mapRef.current as MapboxMap);
+          }
+        );
+      }
+      // Add geocoder to the map
+      mapRef.current.addControl(geocoder, "top-left");
 
-      // Example parking spots (replace with real-time data)
-      const parkingSpots = [
-        { lng: -24.001, lat: 42.001, available: false },
-        { lng: -24.002, lat: 42.002, available: false },
-      ];
-
-      // Add parking spot markers
-      parkingSpots.forEach((spot) => {
-        new Marker({
-          color: spot.available ? "green" : "red",
-        })
-          .setLngLat([spot.lng, spot.lat])
-          .addTo(mapRef.current as MapboxMap);
+      // Preserve zoom and center on style change
+      mapRef.current.on("style.load", () => {
+        const center = mapRef.current?.getCenter();
+        const zoom = mapRef.current?.getZoom();
+        if (center && zoom) {
+          mapRef.current?.setCenter(center);
+          mapRef.current?.setZoom(zoom);
+        }
       });
     }
-
+    setMapReady(true);
     // Cleanup the map on component unmount
     return () => {
-      if (mapRef.current) mapRef.current.remove();
+      if (mapRef.current) {
+        setMapReady(false);
+        mapRef.current.remove();
+      }
     };
-  }, []); // Initial map setup
+  }, [mapStyle]); // Re-run effect when mapStyle changes
 
   // Toggle map style without resetting zoom or center
   const toggleMapStyle = () => {
@@ -90,51 +140,10 @@ const MapboxExample = forwardRef((props, ref) => {
     }
   };
 
-  // Handle search submission
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery) return;
-
-    try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          searchQuery
-        )}.json?access_token=${mapboxgl.accessToken}`
-      );
-      const data = await response.json();
-
-      if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].center;
-        mapRef.current?.flyTo({ center: [lng, lat], zoom: 15 });
-      } else {
-        alert("Location not found. Please try a different search.");
-      }
-    } catch (error) {
-      console.error("Error searching for location:", error);
-    }
-  };
-
   return (
     <div className="w-full h-[calc(100dvh)] relative">
-      {/* Search Input */}
-      <div className="absolute top-4 left-4 z-[2] flex gap-2">
-        <form onSubmit={handleSearch}>
-          <input
-            type="text"
-            placeholder="Search for a location"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
-          />
-          <button
-            type="submit"
-            className="ml-2 p-2 bg-blue-500 text-white rounded"
-          >
-            Search
-          </button>
-        </form>
-
-        {/* Toggle Button */}
+      {/* Toggle Button */}
+      <div className="absolute top-16 left-4 z-[2]">
         <button
           onClick={toggleMapStyle}
           className="p-2 bg-gray-500 text-white rounded"
