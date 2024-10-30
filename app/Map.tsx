@@ -1,5 +1,11 @@
 "use client";
-import React, { useEffect, useRef, useState, forwardRef } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useCallback,
+} from "react";
 import mapboxgl, {
   Map as MapboxMap,
   GeolocateControl,
@@ -87,7 +93,7 @@ const MapboxExample = forwardRef((props, ref) => {
             status: string;
           }) => {
             new Marker({
-              color: spot.status ? "green" : "red",
+              color: spot.status === "available" ? "green" : "red",
             })
               .setLngLat([spot.longitude, spot.latitude])
               .addTo(mapRef.current as MapboxMap);
