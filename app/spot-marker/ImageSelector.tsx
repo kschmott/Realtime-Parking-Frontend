@@ -8,9 +8,10 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"; // Replace with actual path to your Shadcn Select components
+import { ImagePreview } from "./UploadImages";
 
 interface ImageSelectorProps {
-  images: string[];
+  images: ImagePreview[];
   selectedImageIndex: number;
   setSelectedImageIndex: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -25,7 +26,9 @@ const ImageSelector: React.FC<ImageSelectorProps> = ({
   };
 
   return (
-    <div className="flex justify-center " style={{ marginLeft: "-700px" }}> {/* Centering Container */}
+    <div className="flex justify-center " style={{ marginLeft: "-700px" }}>
+      {" "}
+      {/* Centering Container */}
       <Select onValueChange={handleChange} value={String(selectedImageIndex)}>
         <SelectTrigger className="max-w-xs">
           <SelectValue placeholder="Select Image" />

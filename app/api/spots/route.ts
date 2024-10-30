@@ -1,4 +1,4 @@
-import { saveSpots } from "@/db/spots";
+import { updateSpots } from "@/db/spots";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const spots = decodeLoraMessage(body.uplink_message.decoded_payload.bytes);
   console.log(JSON.stringify(spots, null, 2));
   // Save the spots to the database
-  await saveSpots(spots);
+  await updateSpots(spots);
   return Response.json({
     receivedBody: body,
   });
@@ -25,7 +25,7 @@ function decodeLoraMessage(bytes: Uint8Array) {
     const byte = bytes[i];
     const id = byte >> 1;
     const isOccupied = byte & 1;
-    spots.push({ id, status: isOccupied ? "occupied" : "free" });
+    spots.push({ id, status: isOccupied ? "occupied" : "available" });
   }
   return spots;
 }

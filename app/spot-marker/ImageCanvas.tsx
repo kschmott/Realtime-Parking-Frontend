@@ -10,9 +10,10 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"; // Import Shadcn select components
+import { ImagePreview } from "./UploadImages";
 
 interface ImageCanvasProps {
-  image: string;
+  image: ImagePreview;
   imageIndex: number;
   spots: Spot[];
   setSpots: React.Dispatch<React.SetStateAction<Spot[]>>;
@@ -73,7 +74,7 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const img = new Image();
-    img.src = image;
+    img.src = image.url;
     img.onload = () => {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       spots
@@ -140,7 +141,15 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
   return (
     <div className="flex space-x-6 items-start">
       {/* Image Section */}
-      <div style={{ position: "relative", width: "50%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div
+        style={{
+          position: "relative",
+          width: "50%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
         {/* Canvas for image marking */}
         <canvas
           ref={canvasRef}
@@ -149,11 +158,25 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
           onClick={handleClick}
           style={{ border: "1px solid black" }}
         />
-        <Button onClick={handleRemoveLastSpot} style={{ marginTop: "10px", alignSelf: "center" }}>Remove Last Spot</Button>
+        <Button
+          onClick={handleRemoveLastSpot}
+          style={{ marginTop: "10px", alignSelf: "center" }}
+        >
+          Remove Last Spot
+        </Button>
       </div>
 
       {/* Map Section */}
-      <div style={{ position: "relative", width: "50%", height: "640px", display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
+      <div
+        style={{
+          position: "relative",
+          width: "50%",
+          height: "640px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+        }}
+      >
         {/* Dropdown centered above the map */}
         <div
           style={{
@@ -187,7 +210,6 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
       </div>
     </div>
   );
-  
 };
 
 export default ImageCanvas;

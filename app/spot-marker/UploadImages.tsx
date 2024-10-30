@@ -3,8 +3,13 @@ import { Button } from "@/components/ui/button"; // Replace with the actual path
 import { readAndCompressImage } from "browser-image-resizer";
 
 interface UploadImagesProps {
-  setImages: React.Dispatch<React.SetStateAction<string[]>>;
+  setImages: React.Dispatch<React.SetStateAction<ImagePreview[]>>;
 }
+
+export type ImagePreview = {
+  name: string;
+  url: string;
+};
 
 const config = {
   quality: 1,
@@ -39,17 +44,20 @@ const UploadImages: React.FC<UploadImagesProps> = ({ setImages }) => {
 
     try {
       const resizedImageBlobs = await Promise.all(resizedImagePromises);
-      const imageUrls = resizedImageBlobs.map((blob) =>
-        URL.createObjectURL(blob)
-      );
-      setImages(imageUrls);
+      const images = resizedImageBlobs.map((blob, i) => {
+        const url = URL.createObjectURL(blob);
+        return { name: files[i].name, url };
+      });
+      setImages(images);
     } catch (error) {
       console.error("Error resizing images:", error);
     }
   };
 
   return (
-    <div className="flex justify-center "> {/* Flex container to center the button */}
+    <div className="flex justify-center ">
+      {" "}
+      {/* Flex container to center the button */}
       <Button onClick={handleButtonClick}>Upload Images</Button>
       <input
         type="file"
