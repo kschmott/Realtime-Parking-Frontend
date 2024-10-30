@@ -1,0 +1,49 @@
+{
+    "end_device_ids": {
+      "device_id": "lora-device",
+      "application_ids": {
+        "application_id": "parking-location"
+      },
+      "dev_eui": "F8C61C63E6A038B6",
+      "join_eui": "4E9C83C26C4491C8"
+    },
+    "correlation_ids": [
+      "as:up:01JBFJ4YZN4SCJKNGBSR5177PR",
+      "rpc:/ttn.lorawan.v3.AppAs/SimulateUplink:57c0611b-5419-438c-8dcc-b5b806f8b837"
+    ],
+    "received_at": "2024-10-30T20:33:52.115046685Z",
+    "uplink_message": {
+      "f_port": 1,
+      "frm_payload": "6ry9y7zf",
+      "decoded_payload": {
+        "bytes": [
+          234,
+          188,
+          189,
+          203,
+          188,
+          223
+        ]
+      },
+      "rx_metadata": [
+        {
+          "gateway_ids": {
+            "gateway_id": "test"
+          },
+          "rssi": 42,
+          "channel_rssi": 42,
+          "snr": 4.2
+        }
+      ],
+      "settings": {
+        "data_rate": {
+          "lora": {
+            "bandwidth": 125000,
+            "spreading_factor": 7
+          }
+        },
+        "frequency": "868000000"
+      }
+    },
+    "simulated": true
+  }
