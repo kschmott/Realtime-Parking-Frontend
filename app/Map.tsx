@@ -36,7 +36,7 @@ const MapboxExample = forwardRef((props, ref) => {
           status: string;
         }) => {
           new Marker({
-            color: spot.status ? "green" : "red",
+            color: spot.status === "available" ? "green" : "red",
           })
             .setLngLat([spot.longitude, spot.latitude])
             .addTo(mapRef.current as MapboxMap);
