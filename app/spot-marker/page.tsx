@@ -21,29 +21,31 @@ function ParkingSpotsPage() {
     <div>
       <UploadImages setImages={setImages} />
       {images.length > 0 && (
-        <Button
-          onClick={async () => {
-            await fetch("/api/lot", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ spots }),
-            });
-            const data: any = spots.map((spot) => {
-              return {
-                id: spot.id,
-                location: spot.location,
-                points: spot.points,
-                imageIndex: spot.imageIndex,
-                imageName: images[spot.imageIndex].name,
-              };
-            });
-            saveToJSONFile(data);
-          }}
-        >
-          Download and Save
-        </Button>
+        <div className="flex justify-center m-4">
+          <Button
+            onClick={async () => {
+              await fetch("/api/lot", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ spots }),
+              });
+              const data: any = spots.map((spot) => {
+                return {
+                  id: spot.id,
+                  location: spot.location,
+                  points: spot.points,
+                  imageIndex: spot.imageIndex,
+                  imageName: images[spot.imageIndex].name,
+                };
+              });
+              saveToJSONFile(data);
+            }}
+          >
+            Download and Save
+          </Button>
+        </div>
       )}
       {images.length > 0 && (
         <div>
