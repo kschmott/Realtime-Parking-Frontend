@@ -7,7 +7,6 @@ import dynamic from "next/dynamic";
 import { ImagePreview } from "./UploadImages";
 import { Button } from "@/components/ui/button";
 import { saveToJSONFile } from "@/lib/json";
-import { clearAndSetSpots } from "@/db/spots";
 const UploadImages = dynamic(() => import("./UploadImages"), {
   ssr: false,
 });
