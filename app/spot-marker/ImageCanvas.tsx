@@ -53,6 +53,9 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
         imageIndex,
         points: currentPoints,
         location: null, // Add location property to Spot
+        parkingLotName: "",
+        openingHours: "",
+        price: ""
       };
       setSpots((prev) => [...prev, newSpot]);
       setNextSpotId((prev) => prev + 1);
@@ -77,7 +80,7 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     img.src = image.url;
     img.onload = () => {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      spots
+      (spots || [])
         .filter((spot) => spot.imageIndex === imageIndex)
         .forEach((spot) => {
           drawSpot(ctx, spot);
@@ -138,6 +141,18 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     setSelectedSpotId(Number(value));
   };
 
+  const handleInputChange = (field: keyof Spot, value: string) => {
+    if (selectedSpotId !== null) {
+      setSpots((prevSpots) =>
+        prevSpots.map((spot) =>
+          spot.id === selectedSpotId ? { ...spot, [field]: value } : spot
+        )
+      );
+    }
+  };
+
+  const selectedSpot = spots.find((spot) => spot.id === selectedSpotId);
+
   return (
     <div className="flex space-x-6 items-start">
       {/* Image Section */}
@@ -164,6 +179,31 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
         >
           Remove Last Spot
         </Button>
+
+        {/* Input Fields */}
+        <div style={{ marginTop: "10px" }}>
+          <input
+            type="text"
+            placeholder="Parking Lot Name"
+            value={selectedSpot?.parkingLotName || ""}
+            onChange={(e) => handleInputChange("parkingLotName", e.target.value)}
+            style={{ display: "block", marginBottom: "5px" }}
+          />
+          <input
+            type="text"
+            placeholder="Opening Hours"
+            value={selectedSpot?.openingHours || ""}
+            onChange={(e) => handleInputChange("openingHours", e.target.value)}
+            style={{ display: "block", marginBottom: "5px" }}
+          />
+          <input
+            type="text"
+            placeholder="Price"
+            value={selectedSpot?.price || ""}
+            onChange={(e) => handleInputChange("price", e.target.value)}
+            style={{ display: "block", marginBottom: "5px" }}
+          />
+        </div>
       </div>
 
       {/* Map Section */}
