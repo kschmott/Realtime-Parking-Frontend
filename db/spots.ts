@@ -50,6 +50,7 @@ export async function clearAndSetSpots(spots: LabledSpot[]) {
       latitude: spot.location?.lat || 0, // Use default value if location is null
       longitude: spot.location?.lng || 0, // Use default value if location is null
       status: "available", // Default status for new spots
+      parkingLotName: spot.parkingLotName,
     }));
 
     // Insert new spots into the table

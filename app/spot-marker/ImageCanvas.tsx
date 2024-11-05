@@ -1,15 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button"; // Ensure this is the correct path for your Button component
-import MapboxExample from "../MapMark"; // Adjust the path if necessary
-import { Spot, Point } from "./types";
-import SimpleMap from "./MapMark"; // Import the SimpleMap component
+import { Button } from "@/components/ui/button";
+import SimpleMap from "./MapMark";
+import { Spot, Point, Lot } from "./types";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"; // Import Shadcn select components
+} from "@/components/ui/select";
 import { ImagePreview } from "./UploadImages";
 
 interface ImageCanvasProps {
@@ -31,6 +30,11 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
 }) => {
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
   const [selectedSpotId, setSelectedSpotId] = useState<number | null>(null);
+  const [lotData, setLotData] = useState<Lot>({
+    parkingLotName: "",
+    openingHours: undefined,
+    price: undefined,
+  });
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -46,27 +50,71 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     setCurrentPoints((prev) => [...prev, point]);
   };
 
+  const handleSaveSpotAndLot = async (updatedSpot: Spot) => {
+    try {
+      const spotData = {
+        id: updatedSpot.id,
+        latitude: updatedSpot.location?.lat,
+        longitude: updatedSpot.location?.lng,
+        status: updatedSpot.status || "available",
+        parkingLotName: updatedSpot.parkingLotName,
+      };
+
+      // Use the lotData state for saving lot information
+      const lotDataToSave: Lot = {
+        parkingLotName: lotData.parkingLotName,
+        openingHours: lotData.openingHours,
+        price: lotData.price,
+      };
+
+      // Save spot data
+      const spotResponse = await fetch("/api/spots", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(spotData),
+      });
+
+      if (!spotResponse.ok) {
+        console.error("Failed to save spot:", spotResponse.statusText);
+      }
+
+      // Save lot data
+      const lotResponse = await fetch("/api/lot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ spots: [lotDataToSave] }), // Adjusted to match your API requirement
+      });
+
+      if (!lotResponse.ok) {
+        console.error("Failed to save lot:", lotResponse.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving spot and lot:", error);
+    }
+  };
+
   useEffect(() => {
     if (currentPoints.length === 4) {
       const newSpot: Spot = {
         id: nextSpotId,
         imageIndex,
         points: currentPoints,
-        location: null, // Add location property to Spot
-        parkingLotName: "",
-        openingHours: "",
-        price: ""
+        location: null, // Initially no location
+        parkingLotName: "", // Initially empty
+        status: "available", // Default status for new spots
       };
       setSpots((prev) => [...prev, newSpot]);
       setNextSpotId((prev) => prev + 1);
       setCurrentPoints([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPoints]);
 
   useEffect(() => {
     drawCanvas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [image, spots, currentPoints, imageIndex]);
 
   const drawCanvas = () => {
@@ -141,13 +189,16 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     setSelectedSpotId(Number(value));
   };
 
-  const handleInputChange = (field: keyof Spot, value: string) => {
+  const handleInputChange = (field: keyof Lot, value: string) => {
     if (selectedSpotId !== null) {
-      setSpots((prevSpots) =>
-        prevSpots.map((spot) =>
-          spot.id === selectedSpotId ? { ...spot, [field]: value } : spot
-        )
-      );
+      // Update the Lot data separately
+      setLotData((prev) => ({ ...prev, [field]: value }));
+
+      // Save the spot data to ensure it stays updated
+      const updatedSpot = spots.find(spot => spot.id === selectedSpotId);
+      if (updatedSpot) {
+        handleSaveSpotAndLot(updatedSpot);
+      }
     }
   };
 
@@ -155,7 +206,6 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
   return (
     <div className="flex space-x-6 items-start">
-      {/* Image Section */}
       <div
         style={{
           position: "relative",
@@ -165,7 +215,6 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
           alignItems: "center",
         }}
       >
-        {/* Canvas for image marking */}
         <canvas
           ref={canvasRef}
           width={640}
@@ -180,33 +229,31 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
           Remove Last Spot
         </Button>
 
-        {/* Input Fields */}
         <div style={{ marginTop: "10px" }}>
           <input
             type="text"
             placeholder="Parking Lot Name"
-            value={selectedSpot?.parkingLotName || ""}
+            value={lotData.parkingLotName}
             onChange={(e) => handleInputChange("parkingLotName", e.target.value)}
             style={{ display: "block", marginBottom: "5px" }}
           />
           <input
             type="text"
             placeholder="Opening Hours"
-            value={selectedSpot?.openingHours || ""}
+            value={lotData.openingHours || ""}
             onChange={(e) => handleInputChange("openingHours", e.target.value)}
             style={{ display: "block", marginBottom: "5px" }}
           />
           <input
             type="text"
             placeholder="Price"
-            value={selectedSpot?.price || ""}
+            value={lotData.price || ""}
             onChange={(e) => handleInputChange("price", e.target.value)}
             style={{ display: "block", marginBottom: "5px" }}
           />
         </div>
       </div>
 
-      {/* Map Section */}
       <div
         style={{
           position: "relative",
@@ -217,11 +264,10 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
           alignItems: "flex-start",
         }}
       >
-        {/* Dropdown centered above the map */}
         <div
           style={{
             position: "absolute",
-            top: "-50px", // Adjust vertical positioning as needed
+            top: "-50px",
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1,
@@ -241,7 +287,6 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
           </Select>
         </div>
 
-        {/* Map component */}
         <SimpleMap
           onSpotPlaced={handleSpotPlacedOnMap}
           selectedSpotId={selectedSpotId}

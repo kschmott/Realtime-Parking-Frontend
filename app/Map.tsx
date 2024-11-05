@@ -1,74 +1,68 @@
 "use client";
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  forwardRef,
-  useCallback,
-} from "react";
-import mapboxgl, {
-  Map as MapboxMap,
-  GeolocateControl,
-  Marker,
-} from "mapbox-gl";
+import React, { useEffect, useRef, useState, forwardRef } from "react";
+import mapboxgl, { Map as MapboxMap, GeolocateControl, Marker } from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 
+interface Spot {
+  id: number;
+  latitude: number;
+  longitude: number;
+  lotId: number;
+  status: string;
+  parkingLotName: string;
+}
+
+interface Lot {
+  parkingLotName: string;
+  openingHours: string;
+  price: string;
+}
+
 const MapboxExample = forwardRef((props, ref) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const [mapReady, setMapReady] = useState(false);
-  const [parkingSpots, setParkingSpots] = useState([]);
+  const [parkingSpots, setParkingSpots] = useState<Spot[]>([]);
+  const [lots, setLots] = useState<Lot[]>([]);
   const mapRef = useRef<MapboxMap | null>(null);
-  const [mapStyle, setMapStyle] = useState(
-    "mapbox://styles/mapbox/streets-v12"
-  );
+  const [mapStyle, setMapStyle] = useState("mapbox://styles/mapbox/streets-v12");
 
   useEffect(() => {
-    if (mapReady && parkingSpots.length > 0) {
-      parkingSpots.forEach(
-        (spot: {
-          id: number;
-          latitude: number;
-          longitude: number;
-          parkingLotName: string;
-          openingHours: string;
-          price: string;
-        }) => {
-          const marker = new Marker({ color: "green" })
-            .setLngLat([spot.longitude, spot.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 })
-                .setHTML(`
-                  <div>
-                    <p><strong>Spot ID:</strong> ${spot.id}</p>
-                    <p><strong>Parking Lot:</strong> ${spot.parkingLotName}</p>
-                    <p><strong>Hours:</strong> ${spot.openingHours}</p>
-                    <p><strong>Price:</strong> ${spot.price}</p>
-                  </div>
-                `)
-            )
-            .addTo(mapRef.current as MapboxMap);
+    const fetchSpotsAndLots = async () => {
+      try {
+        const spotsRes = await fetch("/api/spots");
+        const lotsRes = await fetch("/api/lot");
+
+        if (!spotsRes.ok || !lotsRes.ok) {
+          throw new Error(`Failed to fetch data: ${spotsRes.statusText}, ${lotsRes.statusText}`);
         }
-      );
-    }
-  }, [mapReady, parkingSpots]);
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch("/api/spots");
-      const data = await res.json();
-      setParkingSpots(data.spots);
+
+        const spotsData = await spotsRes.json();
+        const lotsData = await lotsRes.json();
+
+        if (spotsData?.spots) {
+          setParkingSpots(spotsData.spots);
+        } else {
+          console.error("Expected 'spots' key not found in response data");
+        }
+
+        if (lotsData?.lots) {
+          setLots(lotsData.lots);
+        } else {
+          console.error("Expected 'lots' key not found in response data");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
-    fetchData();
+
+    fetchSpotsAndLots();
   }, []);
 
   useEffect(() => {
-    mapboxgl.accessToken =
-      "pk.eyJ1IjoiYXJ1bG1rMTciLCJhIjoiY2x5eWphY2VsMmEwejJqcHlyMTBpNTA5YSJ9.awhbH-MC409jQiIcp9K1Ig";
+    mapboxgl.accessToken = "pk.eyJ1IjoiYXJ1bG1rMTciLCJhIjoiY2x5eWphY2VsMmEwejJqcHlyMTBpNTA5YSJ9.awhbH-MC409jQiIcp9K1Ig"; // Add your Mapbox token here
 
     if (mapContainerRef.current) {
-      // Initialize the Mapbox map instance
       mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: mapStyle,
@@ -76,44 +70,22 @@ const MapboxExample = forwardRef((props, ref) => {
         zoom: 1,
       });
 
-      // Add geolocate control to the map
       const geolocateControl = new GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true,
-        },
+        positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
         showUserHeading: true,
         fitBoundsOptions: { maxZoom: 15 },
       });
       mapRef.current.addControl(geolocateControl);
 
-      // Add Mapbox Geocoder for search functionality
       const geocoder = new MapboxGeocoder({
         accessToken: mapboxgl.accessToken,
         mapboxgl: mapboxgl as any,
-        marker: false, // Disable default marker
+        marker: false,
         placeholder: "Search for a location",
       });
-      if (parkingSpots.length > 0) {
-        parkingSpots.forEach(
-          (spot: {
-            id: number;
-            latitude: number;
-            longitude: number;
-            status: string;
-          }) => {
-            new Marker({
-              color: spot.status === "available" ? "green" : "red",
-            })
-              .setLngLat([spot.longitude, spot.latitude])
-              .addTo(mapRef.current as MapboxMap);
-          }
-        );
-      }
-      // Add geocoder to the map
       mapRef.current.addControl(geocoder, "top-left");
 
-      // Preserve zoom and center on style change
       mapRef.current.on("style.load", () => {
         const center = mapRef.current?.getCenter();
         const zoom = mapRef.current?.getZoom();
@@ -123,31 +95,46 @@ const MapboxExample = forwardRef((props, ref) => {
         }
       });
     }
-    setMapReady(true);
-    // Cleanup the map on component unmount
-    return () => {
-      if (mapRef.current) {
-        setMapReady(false);
-        mapRef.current.remove();
-      }
-    };
-  }, [mapStyle]); // Re-run effect when mapStyle changes
 
-  // Toggle map style without resetting zoom or center
+    return () => {
+      mapRef.current?.remove();
+    };
+  }, [mapStyle]);
+
+  useEffect(() => {
+    if (mapRef.current && parkingSpots.length > 0 && lots.length > 0) {
+      parkingSpots.forEach((spot: Spot) => {
+        const lot = lots.find((lot) => lot.parkingLotName === spot.parkingLotName);
+        
+        if (lot) {
+          new Marker({ color: spot.status === "available" ? "green" : "red" })
+            .setLngLat([spot.longitude, spot.latitude])
+            .setPopup(
+              new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                <div>
+                  <h3><strong>${lot.parkingLotName}</strong></h3>
+                  <p><strong>Hours:</strong> ${lot.openingHours}</p>
+                  <p><strong>Price:</strong> ${lot.price}</p>
+                </div>
+              `)
+            )
+            .addTo(mapRef.current as MapboxMap);
+        }
+      });
+    }
+  }, [parkingSpots, lots]);
+
   const toggleMapStyle = () => {
     if (mapRef.current) {
-      // Get current center and zoom
       const currentCenter = mapRef.current.getCenter();
       const currentZoom = mapRef.current.getZoom();
 
-      // Toggle style
       const newStyle =
         mapStyle === "mapbox://styles/mapbox/streets-v12"
           ? "mapbox://styles/mapbox/satellite-streets-v12"
           : "mapbox://styles/mapbox/streets-v12";
       setMapStyle(newStyle);
 
-      // Set the new style while preserving center and zoom
       mapRef.current.setStyle(newStyle);
       mapRef.current.on("style.load", () => {
         mapRef.current?.setCenter(currentCenter);
@@ -157,8 +144,7 @@ const MapboxExample = forwardRef((props, ref) => {
   };
 
   return (
-    <div className="w-full h-[calc(100dvh)] relative">
-      {/* Toggle Button */}
+    <div className="w-full h-[calc(100vh)] relative">
       <div className="absolute top-16 left-4 z-[2]">
         <button
           onClick={toggleMapStyle}
@@ -168,7 +154,6 @@ const MapboxExample = forwardRef((props, ref) => {
         </button>
       </div>
 
-      {/* Map Container */}
       <div id="map" ref={mapContainerRef} style={{ height: "100%" }}></div>
     </div>
   );

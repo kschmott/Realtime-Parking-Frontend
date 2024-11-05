@@ -8,7 +8,12 @@ export interface Spot {
   imageIndex: number;
   points: Point[];
   location?: { lng: number; lat: number } | null; // Optional location property
-  parkingLotName?: string;
+  status: string;
+  parkingLotName: string;
+}
+
+export interface Lot {
+  parkingLotName: string;
   openingHours?: string;
   price?: string;
 }
