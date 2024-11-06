@@ -25,25 +25,35 @@ const MapboxExample = forwardRef((props, ref) => {
   );
 
   useEffect(() => {
-    console.log(parkingSpots, "parkingSpots");
-    console.log(mapReady, "mapReady");
     if (mapReady && parkingSpots.length > 0) {
       parkingSpots.forEach(
         (spot: {
           id: number;
           latitude: number;
           longitude: number;
-          status: string;
+          parkingLotName: string;
+          openingHours: string;
+          price: string;
         }) => {
-          new Marker({
-            color: spot.status === "available" ? "green" : "red",
-          })
+          const marker = new Marker({ color: "green" })
             .setLngLat([spot.longitude, spot.latitude])
+            .setPopup(
+              new mapboxgl.Popup({ offset: 25 })
+                .setHTML(`
+                  <div>
+                    <p><strong>Spot ID:</strong> ${spot.id}</p>
+                    <p><strong>Parking Lot:</strong> ${spot.parkingLotName}</p>
+                    <p><strong>Hours:</strong> ${spot.openingHours}</p>
+                    <p><strong>Price:</strong> ${spot.price}</p>
+                  </div>
+                `)
+            )
             .addTo(mapRef.current as MapboxMap);
         }
       );
     }
   }, [mapReady, parkingSpots]);
+  
   useEffect(() => {
     const fetchData = async () => {
       const res = await fetch("/api/spots", { next: { revalidate: 60 } });

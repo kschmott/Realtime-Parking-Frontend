@@ -53,6 +53,9 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
         imageIndex,
         points: currentPoints,
         location: null, // Add location property to Spot
+        parkingLotName: "",
+        openingHours: "",
+        price: "",
       };
       setSpots((prev) => [...prev, newSpot]);
       setNextSpotId((prev) => prev + 1);
@@ -77,7 +80,7 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
     img.src = image.url;
     img.onload = () => {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      spots
+      (spots || [])
         .filter((spot) => spot.imageIndex === imageIndex)
         .forEach((spot) => {
           drawSpot(ctx, spot);
@@ -164,6 +167,8 @@ const ImageCanvas: React.FC<ImageCanvasProps> = ({
         >
           Remove Last Spot
         </Button>
+
+        {/* Input Fields */}
       </div>
 
       {/* Map Section */}
