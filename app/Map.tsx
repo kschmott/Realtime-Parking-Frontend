@@ -31,29 +31,18 @@ const MapboxExample = forwardRef((props, ref) => {
           id: number;
           latitude: number;
           longitude: number;
-          parkingLotName: string;
-          openingHours: string;
-          price: string;
+          status: string;
         }) => {
-          const marker = new Marker({ color: "green" })
+          new Marker({
+            color: spot.status === "available" ? "green" : "red",
+          })
             .setLngLat([spot.longitude, spot.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 })
-                .setHTML(`
-                  <div>
-                    <p><strong>Spot ID:</strong> ${spot.id}</p>
-                    <p><strong>Parking Lot:</strong> ${spot.parkingLotName}</p>
-                    <p><strong>Hours:</strong> ${spot.openingHours}</p>
-                    <p><strong>Price:</strong> ${spot.price}</p>
-                  </div>
-                `)
-            )
             .addTo(mapRef.current as MapboxMap);
         }
       );
     }
   }, [mapReady, parkingSpots]);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       const res = await fetch("/api/spots", { next: { revalidate: 60 } });
