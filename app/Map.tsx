@@ -46,7 +46,7 @@ const MapboxExample = forwardRef((props, ref) => {
   }, [mapReady, parkingSpots]);
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch("/api/spots");
+      const res = await fetch("/api/spots", { next: { revalidate: 60 } });
       const data = await res.json();
       setParkingSpots(data.spots);
     };

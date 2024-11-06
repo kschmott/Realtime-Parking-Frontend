@@ -36,13 +36,10 @@ export const updateSpots = async (spots: Spot[]) => {
 };
 
 export async function clearAndSetSpots(spots: LabledSpot[]) {
-  // Extract spot IDs from the provided spots array
-  const spotIds = spots.map((spot) => spot.id);
-
   // Start a transaction
   await db.transaction(async (tx) => {
-    // Clear existing spots that match the input spot IDs
-    await tx.delete(SpotsTable).where(inArray(SpotsTable.id, spotIds));
+    // Clear all existing spots in the database
+    await tx.delete(SpotsTable);
 
     // Prepare the new spots for insertion
     const newSpots = spots.map((spot) => ({
