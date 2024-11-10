@@ -20,7 +20,7 @@ export type Spot = {
 function decodeLoraMessage(bytes: Uint8Array) {
   // First 7 bits is the parking spot id
   // Next 1 bit is the occupied status
-  const set= new Set(bytes);
+  const set = new Set(bytes);
   const dedupedBytes = Array.from(set);
   const spots: Spot[] = [];
   for (let i = 0; i < dedupedBytes.length; i++) {
@@ -29,7 +29,7 @@ function decodeLoraMessage(bytes: Uint8Array) {
     const isOccupied = byte & 1;
     spots.push({ id, status: isOccupied ? "occupied" : "available" });
   }
-  return spots;
+  return spots.filter((spot) => spot.id !== 0);
 }
 
 export async function GET(req: Request) {
