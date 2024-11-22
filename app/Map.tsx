@@ -45,11 +45,16 @@ const MapboxExample = forwardRef((props, ref) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch("/api/spots", { next: { revalidate: 60 } });
+      const res = await fetch("/api/spots", { next: { revalidate: 29 } });
       const data = await res.json();
       setParkingSpots(data.spots);
     };
-    fetchData();
+
+    fetchData(); // Initial fetch
+
+    const intervalId = setInterval(fetchData, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
   useEffect(() => {
