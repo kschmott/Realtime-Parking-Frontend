@@ -23,7 +23,7 @@ function decodeLoraMessage(bytes: Uint8Array) {
   const set = new Set(bytes);
   const dedupedBytes = Array.from(set);
   const spots: Spot[] = [];
-  for (let i = 0; i < dedupedBytes.length - 20; i++) {
+  for (let i = 0; i < dedupedBytes.length; i++) {
     const byte = dedupedBytes[i];
     const id = byte >> 1;
     const isOccupied = byte & 1;
