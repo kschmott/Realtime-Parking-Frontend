@@ -33,7 +33,7 @@ function decodeLoraMessage(bytes: Uint8Array) {
 
 export async function GET(req: Request) {
   const spots = await getAllSpots();
-  console.log(spots);
+
   return Response.json({
     spots,
   });
