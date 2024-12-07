@@ -7,7 +7,6 @@ import { inArray, sql, eq } from "drizzle-orm";
 export const updateSpots = async (spots: Spot[]) => {
   // Extract the spot IDs from the provided spots array
   const spotIds = spots.map((spot) => spot.id);
-  console.log("Spot IDs", spotIds);
   // Start a transaction
   await db.transaction(async (tx) => {
     // Get existing spots from the database
@@ -18,13 +17,10 @@ export const updateSpots = async (spots: Spot[]) => {
 
     // Get the IDs of existing spots
     const existingSpotIds = new Set(existingSpots.map((spot) => spot.id));
-    console.log("Existing spot IDs", existingSpotIds);
     // Filter spots that exist in the database
     const spotsToUpdate = spots.filter((spot) => existingSpotIds.has(spot.id));
-    console.log("Spots to update", spotsToUpdate);
     // Update each spot individually
     for (const spot of spotsToUpdate) {
-      console.log("Updating spot", spot.id, "to", spot.status);
       await tx
         .update(SpotsTable)
         .set({
