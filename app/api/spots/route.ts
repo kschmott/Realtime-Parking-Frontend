@@ -19,17 +19,11 @@ export type Spot = {
 function decodeLoraMessage(bytes: Uint8Array) {
   // First 7 bits is the parking spot id
   // Next 1 bit is the occupied status
-  console.log("Total number of bytes", bytes.length);
-  console.log(
-    "Total number of bytes(Non zero)",
-    bytes.filter((byte) => byte !== 0).length
-  );
+  const filteredBytes = bytes.slice(0, 180).filter((byte) => byte !== 0);
 
-  const set = new Set(bytes);
-  const dedupedBytes = Array.from(set);
   const spots: Spot[] = [];
-  for (let i = 0; i < dedupedBytes.length - 20; i++) {
-    const byte = dedupedBytes[i];
+  for (let i = 0; i < bytes.length - 20; i++) {
+    const byte = filteredBytes[i];
     const id = byte >> 1;
     const isOccupied = byte & 1;
     spots.push({ id, status: isOccupied ? "occupied" : "available" });
